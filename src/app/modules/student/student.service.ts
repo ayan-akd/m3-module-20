@@ -24,12 +24,13 @@ const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
     .sort()
     .paginate()
     .fields();
+  const meta = await studentQuery.countTotalDocuments();
   const result = await studentQuery.modelQuery;
-  return result;
+  return { meta, result };
 };
 
 const getSingleStudentFromDB = async (id: string) => {
-  const result = await Student.findById( id )
+  const result = await Student.findById(id)
     .populate('admissionSemester')
     .populate({
       path: 'academicDepartment',
@@ -64,7 +65,7 @@ const updateStudentFromDB = async (id: string, payload: Partial<TStudent>) => {
     }
   }
 
-  const result = await Student.findByIdAndUpdate( id , modifiedUpdatedData, {
+  const result = await Student.findByIdAndUpdate(id, modifiedUpdatedData, {
     new: true,
     runValidators: true,
   });
@@ -72,7 +73,7 @@ const updateStudentFromDB = async (id: string, payload: Partial<TStudent>) => {
 };
 
 const deleteStudentFromDB = async (id: string) => {
-  const existingUser = await Student.findById( id );
+  const existingUser = await Student.findById(id);
   if (!existingUser) {
     throw new AppError(httpStatus.NOT_FOUND, 'Student not found');
   }
@@ -81,7 +82,7 @@ const deleteStudentFromDB = async (id: string) => {
   try {
     session.startTransaction();
     const deletedStudent = await Student.findByIdAndUpdate(
-       id ,
+      id,
       { isDeleted: true },
       { new: true, session },
     );
@@ -91,7 +92,7 @@ const deleteStudentFromDB = async (id: string) => {
 
     const userId = deletedStudent.user;
     const deleteUser = await User.findByIdAndUpdate(
-      userId ,
+      userId,
       { isDeleted: true },
       { new: true, session },
     );
